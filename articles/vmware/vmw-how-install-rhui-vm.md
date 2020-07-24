@@ -10,58 +10,82 @@ toc_sub1:
 toc_sub2:
 toc_sub3:
 toc_sub4:
-toc_title: Install Red Hat Update Infrastructure on an existing VMware virtual machine
+toc_title: Install Red Hat Update Infrastructure on an existing virtual machine
 toc_fullpath: How To/vmw-how-install-rhui-vm.md
 toc_mdlink: vmw-how-install-rhui-vm.md
 ---
 
-# How to install Red Hat Update Infrastructure on an existing VMware virtual machine
+# How to install Red Hat Update Infrastructure on an existing virtual machine
 
 ## Overview
 
 This article provides advice on how to update your existing Red Hat virtual machines (VMs) to target UKCloud's approved Red Hat Update Infrastructure (RHUI).
 
-As of July 2015, UKCloud implemented an RHUI to provide automatic updates to our Red Hat customers on our Assured OFFICIAL and Elevated OFFICIAL security domains. This provides benefits such as the reliable availability of patch updates and Red Hat approved OS templates.
+As of July 2015, UKCloud implemented RHUI to provide automatic updates to our Red Hat customers on our Assured OFFICIAL and Elevated OFFICIAL security domains. This provides benefits such as the reliable availability of Red Hat approved patches and supported repositories.
 
-This update service replaces the previous repositories, which are no longer updated and were retired on the 31 August 2015.
+This updated service replaces the previous UKCloud RHUI.
+
+## Changes from the previous RHUI
+
+There are several differences between the original UKCloud RHUI and the latest one documented here. One of the major changes is there is now no longer a requirement to differentiate the entitlement RPMs (that grant access to the repositories) between Assured and Elevated. Both have a common hostname. This means a single file (per Operating System version) can be maintained across both environments.
 
 ## Prerequisites
 
-There are two pre-requisites for performing this operation:
+There are two pre-requisites required for using UKCloud's RHUI:
 
-- The host can resolve to the RHUI DNS records (contact Customer Support for the IP addresses and domain names for these records). You can achieve this by configuring an A record on your local DNS, or configuring an `/etc/hosts` file with the appropriate information.
+- The host can resolve the RHUI CDS DNS records (contact Customer Support for the IP addresses for the Elevated records). For Elevated, you can achieve this by configuring an A record in your local DNS, or configuring an `/etc/hosts` file to point to rh-cds.ukcloud.com. For Assured/Internet, you can use the Internet DNS name of rh-cds.ukcloud.com without any additional DNS configuration.
 
-- All hosts using the service must be able to access the local RHUA server on port 443 (HTTPS). Ensure that you have configured SNAT and firewall policies on your edge gateway device. If you have any questions on this, contact UKCloud Support.
+- All hosts using the service must be able to access the RHUI Content Delivery Server (CDS) on port 443 (HTTPS). Ensure that you have configured SNAT and firewall policies on your edge gateway device. If you have any questions on this, contact UKCloud Support.
 
 ## Installation
 
-You can find the installer RPM files in the following locations:
+You can browse the all entitlement RPM files in the following location:
 
-- [Assured RHEL 6 Standard](https://cas.frn00006.ukcloud.com/Docs/UKCloud_Shared_Services/IL2-Client-RHEL6-Standard-2.2-1.noarch.rpm?AWSAccessKeyId=438-1048-5-aefff7-1&Expires=1625780068&Signature=2k%2BmhJ6BKzVVeJi6qwKzBJsG5TM%3D)
+- [ALL RPMS](https://rh-cds.ukcloud.com/redhat/client_rpms/)
 
-- [Assured RHEL 7 Standard](https://cas.frn00006.ukcloud.com/Docs/UKCloud_Shared_Services/IL2-Client-RHEL7-Standard-2.2-1.noarch.rpm?AWSAccessKeyId=438-1048-5-aefff7-1&Expires=1625780100&Signature=%2F4f3KQO02KVG0sNQ7%2FhSH%2BNVCg0%3D)
+Or specific RPMs for direct download are located as follows:
 
-- [Elevated RHEL 6 Standard](https://cas.frn00006.ukcloud.com/Docs/UKCloud_Shared_Services/IL3-Client-RHEL6-Standard-2.5-1.noarch.rpm?AWSAccessKeyId=438-1048-5-aefff7-1&Expires=1625780111&Signature=dP8KvNxmC01dBdt0zOyLPq9Q6rA%3D)
+- [RHEL 6 Standard](https://rh-cds.ukcloud.com/redhat/client_rpms/UKCloud-Client-RHEL6-STANDARD-2.0-2.noarch.rpm)
 
-- [Elevated RHEL 7 Standard](https://cas.frn00006.ukcloud.com/Docs/UKCloud_Shared_Services/IL3-Client-RHEL7-Standard-2.5-1.noarch.rpm?AWSAccessKeyId=438-1048-5-aefff7-1&Expires=1625780129&Signature=pR2g6hZEE%2BZimRCU5G0g9gQHvww%3D)
+- [RHEL 6 Extended Update Support](https://rh-cds.ukcloud.com/redhat/client_rpms/UKCloud-Client-RHEL6-EUS-2.0-1.noarch.rpm)
+
+- [RHEL 7 Standard](https://rh-cds.ukcloud.com/redhat/client_rpms/UKCloud-Client-RHEL7-STANDARD-2.0-2.noarch.rpm)
+
+- [RHEL 7 Extended Update Support](https://rh-cds.ukcloud.com/redhat/client_rpms/UKCloud-Client-RHEL7-EUS-2.0-1.noarch.rpm)
+
+- [RHEL 8 Standard](https://rh-cds.ukcloud.com/redhat/client_rpms/UKCloud-Client-RHEL8-STANDARD-2.0-1.noarch.rpm)
 
 If you require the high availability (HA) package, raise a Service Request directly via the [My Calls](https://portal.skyscapecloud.com/support/ivanti) section of the UKCloud Portal and we'll provide you with a download location.
 
 1. Download the appropriate file to your VM (or place the contents in an accessible location such as NFS share or FTP).
 
-2. Install the relevant RPM.
+2. Install the relevant RPM for your Operating System.
 
-    For example, for RHEL6 in Assured: `yum install IL2-Client-RHEL6-Standard-2.2-1.noarch.rpm`.
-
-    If you're installing a new RPM, such as replacing standard with HA you need to use the `-force` flag to overwrite the existing certificates.
-
-3. Clean yum and the cache:
-
-       yum clean all; rm -rf /var/cache/yum
+   If your system has an entitlement RPM from UKCloud's previous RHUI, then that will need to be removed prior to installing the latest entitlement RPM
+   
+   For example, for RHEL6 or RHEL7 :
+   ```bash
+   yum erase $(rpm -qa|grep IL2-Client)
+   ```
+   
+   Install the new entitlement RPM
+   
+   For example, for RHEL6 :
+   ```bash
+   cd /tmp
+   wget --no-check-certificate https://rh-cds.ukcloud.com/redhat/client_rpms/UKCloud-Client-RHEL6-STANDARD-2.0-2.noarch.rpm
+   yum install UKCloud-Client-RHEL6-STANDARD-2.0-2.noarch.rpm
+   ```
+  
+3. Clean yum and clear the cache:
+   ```bash 
+   yum clean all; rm -rf /var/cache/yum
+   ```
 
 4. Test the RHUI is working:
-
-       yum update
+   ```bash
+   yum update
+   ```
 
 5. The first time you update from RHUI you may be prompted to accept the following two certificates:
 
@@ -71,11 +95,7 @@ If you require the high availability (HA) package, raise a Service Request direc
     
 ## Upgrading the RPMs to a newer version
 
-If you already have one of the original UKCloud RPMs installed on your system and require one of the latest ones documented in this article (due to the original ones expiring), you can run a command to upgrade it once you've downloaded the required files.
-
-For example, for RHEL6 in Assured: `yum update IL2-Client-RHEL6-Standard-2.2-1.noarch.rpm`.
-
-This will overwrite the files and certificates associated with the original RPM and restore access to the RHUA (as well as tidying up the previously installed RPM).
+On occassion, it may be required to update the entitlement RPM local to your systems. This will usually be due to additional repositories being requested and added into the entitlement. If you don't require access to the newly added repositories, then you do not need to install the later version of the RPM
 
 ## Troubleshooting
 
@@ -93,15 +113,7 @@ Check the DNS lookup is working and you have the correct entry for Assured and E
 
 ### Incorrect version
 
-Ensure you have installed the correct RPM for your release.
-
-### Comms errors when trying to upgrade the RPM using yum (RHEL6 only)
-
-Due to the previous RPMs no longer being valid for accessing the RHUI, when running RHEL6, you may see some errors when trying to upgrade the RPM. To work around this, issue: `yum update --disableplugin=rhui-lb IL2-Client-RHEL6-Standard-2.2-1.noarch.rpm`. This is not an issue when running RHEL7.
-
-### Unauthorized (401) Error when trying to access RHUA
-
-You most likely have the original RPMs installed. Follow the instructions in the [*Upgrading the RPMs to a newer version*](#upgrading-the-rpms-to-a-newer-version) section above.
+Ensure you have installed the correct RPM for your Operating System release.
 
 ## Feedback
 
